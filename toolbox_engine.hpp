@@ -79,8 +79,8 @@ class ToolboxEngine {
     GLFWLambdaCallbackManager glfw_lambda_callback_manager;
     InputState input_state;
 
-    std::vector<ShaderType> requested_shaders = {ShaderType::CWL_V_TRANSFORMATION_UBOS_1024_WITH_SOLID_COLOR,
-                                                 ShaderType::ABSOLUTE_POSITION_WITH_COLORED_VERTEX};
+    std::vector<ShaderType> requested_shaders;
+
     ShaderCache shader_cache;
     Batcher batcher;
     FixedFrequencyLoop main_loop;
@@ -95,8 +95,8 @@ class ToolboxEngine {
     };
     SoundSystem sound_system;
 
-    ToolboxEngine(const std::string &program_name)
-        : configuration(default_config_file_path),
+    ToolboxEngine(const std::string &program_name, std::vector<ShaderType> requested_shaders)
+        : configuration(default_config_file_path), requested_shaders(requested_shaders),
           requested_resolution(tbx_engine::extract_width_height_from_resolution(
                                    configuration.get_value("graphics", "resolution").value_or("1280x720"))
                                    .value_or(default_resolution)),
