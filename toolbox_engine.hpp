@@ -70,11 +70,14 @@ class ToolboxEngine {
     const std::string default_config_file_path = "assets/config/user_cfg.ini";
     std::string wh;
     const std::pair<int, int> default_resolution = {1280, 720};
-    std::pair<int, int> requested_resolution;
 
   public:
-    ConsoleLogger logger;
+
     Configuration configuration;
+
+    std::pair<int, int> requested_resolution;
+
+    ConsoleLogger logger;
     Window window;
     GLFWLambdaCallbackManager glfw_lambda_callback_manager;
     InputState input_state;
