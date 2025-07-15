@@ -96,8 +96,8 @@ void potentially_switch_between_menu_and_3d_view(InputState &input_state,
     }
 }
 
-GLFWLambdaCallbackManager create_default_glcm_for_input_and_camera(InputState &input_state, FPSCamera &fps_camera,
-                                                                   Window &window, ShaderCache &shader_cache) {
+AllGLFWLambdaCallbacks create_default_glcm_for_input_and_camera(InputState &input_state, FPSCamera &fps_camera,
+                                                                Window &window, ShaderCache &shader_cache) {
     std::function<void(unsigned int)> char_callback = [](unsigned int codepoint) {};
     std::function<void(int, int, int, int)> key_callback = [&](int key, int scancode, int action, int mods) {
         input_state.glfw_key_callback(key, scancode, action, mods);
@@ -112,7 +112,6 @@ GLFWLambdaCallbackManager create_default_glcm_for_input_and_camera(InputState &i
     std::function<void(int, int)> frame_buffer_size_callback = [&](int width, int height) {
         // this gets called whenever the window changes size, because the framebuffer automatically
         // changes size, that is all done in glfw's context, then we need to update opengl's size.
-        std::cout << "framebuffersize callback called, width" << width << "height: " << height << std::endl;
         glViewport(0, 0, width, height);
         window.width_px = width;
         window.height_px = height;
@@ -120,10 +119,8 @@ GLFWLambdaCallbackManager create_default_glcm_for_input_and_camera(InputState &i
         shader_cache.set_uniform(ShaderType::ABSOLUTE_POSITION_WITH_COLORED_VERTEX, ShaderUniformVariable::ASPECT_RATIO,
                                  glm::vec2(height / (float)width, 1));
     };
-    GLFWLambdaCallbackManager glcm(window.glfw_window, char_callback, key_callback, mouse_pos_callback,
-                                   mouse_button_callback, frame_buffer_size_callback);
 
-    return glcm;
+    return {char_callback, key_callback, mouse_pos_callback, mouse_button_callback, frame_buffer_size_callback};
 }
 
 std::optional<std::pair<int, int>> extract_width_height_from_resolution(const std::string &resolution) {

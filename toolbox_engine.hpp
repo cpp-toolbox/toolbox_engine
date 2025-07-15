@@ -40,8 +40,8 @@ void potentially_switch_between_menu_and_3d_view(InputState &input_state,
                                                  InputGraphicsSoundMenu &input_graphics_sound_menu,
                                                  FPSCamera &fps_camera, Window &window);
 
-GLFWLambdaCallbackManager create_default_glcm_for_input_and_camera(InputState &input_state, FPSCamera &fps_camera,
-                                                                   Window &window, ShaderCache &shader_cache);
+AllGLFWLambdaCallbacks create_default_glcm_for_input_and_camera(InputState &input_state, FPSCamera &fps_camera,
+                                                                Window &window, ShaderCache &shader_cache);
 
 #include <string>
 #include <sstream>
@@ -72,13 +72,13 @@ class ToolboxEngine {
     const std::pair<int, int> default_resolution = {1280, 720};
 
   public:
-
     Configuration configuration;
 
     std::pair<int, int> requested_resolution;
 
     ConsoleLogger logger;
     Window window;
+
     GLFWLambdaCallbackManager glfw_lambda_callback_manager;
     InputState input_state;
 
@@ -107,10 +107,14 @@ class ToolboxEngine {
                  tbx_engine::get_user_on_off_value_or_default(configuration, "graphics", "fullscreen"), false, false),
           sound_system(100, sound_type_to_file), shader_cache(requested_shaders), batcher(shader_cache),
           input_graphics_sound_menu(window, input_state, batcher, sound_system, configuration),
-          glfw_lambda_callback_manager(
-              tbx_engine::create_default_glcm_for_input_and_camera(input_state, fps_camera, window, shader_cache)),
+          glfw_lambda_callback_manager(window.glfw_window),
           main_loop(
               tbx_engine::parse_int_or_default(configuration.get_value("graphics", "max_fps").value_or("60"), 60)) {
+        auto all_callbacks =
+            tbx_engine::create_default_glcm_for_input_and_camera(input_state, fps_camera, window, shader_cache);
+        glfw_lambda_callback_manager.set_all_callbacks(all_callbacks);
+        glfw_lambda_callback_manager.register_all_callbacks_with_glfw();
+
         fps_camera.freeze_camera();
         tbx_engine::register_input_graphics_sound_config_handlers(configuration, fps_camera, main_loop);
         configuration.apply_config_logic();
