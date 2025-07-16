@@ -90,22 +90,19 @@ class ToolboxEngine {
     InputGraphicsSoundMenu input_graphics_sound_menu;
     FPSCamera fps_camera;
 
-    // temporary badness
-    std::unordered_map<SoundType, std::string> sound_type_to_file = {
-        {SoundType::UI_HOVER, "assets/sounds/hover.wav"},
-        {SoundType::UI_CLICK, "assets/sounds/click.wav"},
-        {SoundType::UI_SUCCESS, "assets/sounds/success.wav"},
-    };
+    std::unordered_map<SoundType, std::string> sound_type_to_file;
     SoundSystem sound_system;
 
-    ToolboxEngine(const std::string &program_name, std::vector<ShaderType> requested_shaders)
+    ToolboxEngine(const std::string &program_name, std::vector<ShaderType> requested_shaders,
+                  std::unordered_map<SoundType, std::string> sound_type_to_file)
         : configuration(default_config_file_path), requested_shaders(requested_shaders),
           requested_resolution(tbx_engine::extract_width_height_from_resolution(
                                    configuration.get_value("graphics", "resolution").value_or("1280x720"))
                                    .value_or(default_resolution)),
           window(requested_resolution.first, requested_resolution.second, program_name,
                  tbx_engine::get_user_on_off_value_or_default(configuration, "graphics", "fullscreen"), false, false),
-          sound_system(100, sound_type_to_file), shader_cache(requested_shaders), batcher(shader_cache),
+          sound_type_to_file(sound_type_to_file), sound_system(100, sound_type_to_file),
+          shader_cache(requested_shaders), batcher(shader_cache),
           input_graphics_sound_menu(window, input_state, batcher, sound_system, configuration),
           glfw_lambda_callback_manager(window.glfw_window),
           main_loop(
