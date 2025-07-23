@@ -3,6 +3,10 @@
 
 #include "sbpt_generated_includes.hpp"
 
+#include <string>
+#include <sstream>
+#include <utility>
+
 namespace tbx_engine {
 
 const std::string config_value_slow_move = "slow_move";
@@ -42,10 +46,6 @@ void potentially_switch_between_menu_and_3d_view(InputState &input_state,
 
 AllGLFWLambdaCallbacks create_default_glcm_for_input_and_camera(InputState &input_state, FPSCamera &fps_camera,
                                                                 Window &window, ShaderCache &shader_cache);
-
-#include <string>
-#include <sstream>
-#include <utility>
 
 std::optional<std::pair<int, int>> extract_width_height_from_resolution(const std::string &resolution);
 
@@ -114,6 +114,8 @@ class ToolboxEngine {
 
         fps_camera.freeze_camera();
         tbx_engine::register_input_graphics_sound_config_handlers(configuration, fps_camera, main_loop);
+        // NOTE: this is required to render the menu
+        shader_cache.register_shader_program(ShaderType::ABSOLUTE_POSITION_WITH_COLORED_VERTEX);
         configuration.apply_config_logic();
     }
 };
