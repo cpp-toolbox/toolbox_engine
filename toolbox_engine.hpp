@@ -3,6 +3,7 @@
 
 #include "sbpt_generated_includes.hpp"
 
+#include <GLFW/glfw3.h>
 #include <string>
 #include <sstream>
 #include <utility>
@@ -73,6 +74,8 @@ class ToolboxEngine {
 
   public:
     Configuration configuration;
+
+    bool window_should_close() { return glfwWindowShouldClose(window.glfw_window); }
 
     std::pair<int, int> requested_resolution;
 

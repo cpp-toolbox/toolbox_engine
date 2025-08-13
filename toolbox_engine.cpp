@@ -109,6 +109,8 @@ AllGLFWLambdaCallbacks create_default_glcm_for_input_and_camera(InputState &inpu
     std::function<void(int, int, int)> mouse_button_callback = [&](int button, int action, int mods) {
         input_state.glfw_mouse_button_callback(button, action, mods);
     };
+
+    std::function<void(double, double)> scroll_callback = [&](double x_offset, double y_offset) {};
     std::function<void(int, int)> frame_buffer_size_callback = [&](int width, int height) {
         // this gets called whenever the window changes size, because the framebuffer automatically
         // changes size, that is all done in glfw's context, then we need to update opengl's size.
@@ -120,7 +122,8 @@ AllGLFWLambdaCallbacks create_default_glcm_for_input_and_camera(InputState &inpu
                                  glm::vec2(height / (float)width, 1));
     };
 
-    return {char_callback, key_callback, mouse_pos_callback, mouse_button_callback, frame_buffer_size_callback};
+    return {char_callback,         key_callback,    mouse_pos_callback,
+            mouse_button_callback, scroll_callback, frame_buffer_size_callback};
 }
 
 std::optional<std::pair<int, int>> extract_width_height_from_resolution(const std::string &resolution) {
