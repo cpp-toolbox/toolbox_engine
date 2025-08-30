@@ -104,8 +104,8 @@ class ToolboxEngine {
                                    .value_or(default_resolution)),
           window(requested_resolution.first, requested_resolution.second, program_name,
                  tbx_engine::get_user_on_off_value_or_default(configuration, "graphics", "fullscreen"), false, false),
-          sound_type_to_file(sound_type_to_file), sound_system(100, sound_type_to_file),
-          shader_cache(requested_shaders), batcher(shader_cache),
+          fps_camera(window.width_px, window.height_px), sound_type_to_file(sound_type_to_file),
+          sound_system(100, sound_type_to_file), shader_cache(requested_shaders), batcher(shader_cache),
           input_graphics_sound_menu(window, input_state, batcher, sound_system, configuration),
           glfw_lambda_callback_manager(window.glfw_window),
           main_loop(
