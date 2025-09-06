@@ -61,10 +61,10 @@ int parse_int_or_default(const std::string &text, int default_value);
 
 }; // namespace tbx_engine
 
-class ToolboxEngineCore {
-    ConsoleLogger console_logger;
-    Configuration configuration;
-};
+// class ToolboxEngineCore {
+//     Logger console_logger;
+//     Configuration configuration;
+// };
 
 class ToolboxEngine {
   private:
@@ -79,7 +79,7 @@ class ToolboxEngine {
 
     std::pair<int, int> requested_resolution;
 
-    ConsoleLogger logger;
+    Logger logger{"toolbox_engine"};
     Window window;
 
     GLFWLambdaCallbackManager glfw_lambda_callback_manager;
