@@ -1,4 +1,6 @@
 #include "toolbox_engine.hpp"
+#include <charconv>
+#include <system_error>  // for std::errc
 
 namespace tbx_engine {
 
@@ -162,7 +164,6 @@ bool get_user_on_off_value_or_default(Configuration &configuration, const std::s
     return val;
 }
 
-#include <charconv>
 
 int parse_int_or_default(const std::string &text, int default_value) {
     int result;
@@ -175,4 +176,3 @@ int parse_int_or_default(const std::string &text, int default_value) {
 }
 
 } // namespace tbx_engine
-//
