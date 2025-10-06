@@ -1,6 +1,6 @@
 #include "toolbox_engine.hpp"
 #include <charconv>
-#include <system_error>  // for std::errc
+#include <system_error> // for std::errc
 
 namespace tbx_engine {
 
@@ -78,7 +78,7 @@ void register_input_graphics_sound_config_handlers(Configuration &configuration,
                 std::cout << "max fps value couldn't be converted to an integer." << std::endl;
             }
         }
-        ffl.update_rate_hz = max_fps;
+        ffl.max_update_rate_hz = max_fps;
         std::cout << "just set the update rate on the main tick to " << max_fps << std::endl;
     });
 }
@@ -163,7 +163,6 @@ bool get_user_on_off_value_or_default(Configuration &configuration, const std::s
     }
     return val;
 }
-
 
 int parse_int_or_default(const std::string &text, int default_value) {
     int result;

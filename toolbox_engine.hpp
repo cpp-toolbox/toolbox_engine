@@ -91,6 +91,7 @@ class ToolboxEngine {
     Batcher batcher;
     FixedFrequencyLoop main_loop;
     InputGraphicsSoundMenu input_graphics_sound_menu;
+    // NOTE: this starts frozen so you have to unfreeze it to look around
     FPSCamera fps_camera;
 
     std::unordered_map<SoundType, std::string> sound_type_to_file;
