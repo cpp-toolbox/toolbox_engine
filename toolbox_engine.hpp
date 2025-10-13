@@ -97,6 +97,8 @@ class ToolboxEngine {
     std::unordered_map<SoundType, std::string> sound_type_to_file;
     SoundSystem sound_system;
 
+    UIRenderSuiteImpl ui_render_suite;
+
     ToolboxEngine(const std::string &program_name, std::vector<ShaderType> requested_shaders,
                   std::unordered_map<SoundType, std::string> sound_type_to_file)
         : configuration(default_config_file_path), requested_shaders(requested_shaders),
@@ -110,7 +112,8 @@ class ToolboxEngine {
           input_graphics_sound_menu(window, input_state, batcher, sound_system, configuration),
           glfw_lambda_callback_manager(window.glfw_window),
           main_loop(
-              tbx_engine::parse_int_or_default(configuration.get_value("graphics", "max_fps").value_or("60"), 60)) {
+              tbx_engine::parse_int_or_default(configuration.get_value("graphics", "max_fps").value_or("60"), 60)),
+          ui_render_suite(batcher) {
         auto all_callbacks =
             tbx_engine::create_default_glcm_for_input_and_camera(input_state, fps_camera, window, shader_cache);
         glfw_lambda_callback_manager.set_all_callbacks(all_callbacks);
@@ -121,6 +124,13 @@ class ToolboxEngine {
         // NOTE: this is required to render the menu
         shader_cache.register_shader_program(ShaderType::ABSOLUTE_POSITION_WITH_COLORED_VERTEX);
         configuration.apply_config_logic();
+    }
+
+    /**
+     *
+     */
+    void process_and_queue_render_input_graphics_sound_menu() {
+        input_graphics_sound_menu.process_and_queue_render_menu(window, input_state, ui_render_suite);
     }
 };
 
