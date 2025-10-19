@@ -22,27 +22,6 @@ EKey get_input_key_from_config_or_default_value(InputState &input_state, Configu
     return opt_val.value_or(movement_value_str_to_default_key.at(section_key));
 }
 
-void config_x_input_state_x_fps_camera_processing(FPSCamera &fps_camera, InputState &input_state,
-                                                  Configuration &configuration, double dt) {
-    fps_camera.process_input(
-        input_state.is_pressed(
-            get_input_key_from_config_or_default_value(input_state, configuration, config_value_slow_move)),
-        input_state.is_pressed(
-            get_input_key_from_config_or_default_value(input_state, configuration, config_value_fast_move)),
-        input_state.is_pressed(
-            get_input_key_from_config_or_default_value(input_state, configuration, config_value_forward)),
-        input_state.is_pressed(
-            get_input_key_from_config_or_default_value(input_state, configuration, config_value_left)),
-        input_state.is_pressed(
-            get_input_key_from_config_or_default_value(input_state, configuration, config_value_back)),
-        input_state.is_pressed(
-            get_input_key_from_config_or_default_value(input_state, configuration, config_value_right)),
-        input_state.is_pressed(get_input_key_from_config_or_default_value(input_state, configuration, config_value_up)),
-        input_state.is_pressed(
-            get_input_key_from_config_or_default_value(input_state, configuration, config_value_down)),
-        dt);
-}
-
 void register_input_graphics_sound_config_handlers(Configuration &configuration, FPSCamera &fps_camera,
                                                    FixedFrequencyLoop &ffl) {
 
