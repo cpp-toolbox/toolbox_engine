@@ -90,6 +90,7 @@ class ToolboxEngine {
     ShaderCache shader_cache;
     Batcher batcher;
     FixedFrequencyLoop main_loop;
+    bool igs_menu_active = false;
     InputGraphicsSoundMenu input_graphics_sound_menu;
     // NOTE: this starts frozen so you have to unfreeze it to look around
     FPSCamera fps_camera;
