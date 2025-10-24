@@ -35,9 +35,6 @@ std::optional<EKey> get_input_key_from_config_if_valid(InputState &input_state, 
 EKey get_input_key_from_config_or_default_value(InputState &input_state, Configuration &configuration,
                                                 const std::string &section_key);
 
-void config_x_input_state_x_fps_camera_processing(FPSCamera &fps_camera, InputState &input_state,
-                                                  Configuration &configuration, double dt);
-
 void register_input_graphics_sound_config_handlers(Configuration &configuration, FPSCamera &fps_camera,
                                                    FixedFrequencyLoop &ffl);
 
@@ -132,6 +129,27 @@ class ToolboxEngine {
      */
     void process_and_queue_render_input_graphics_sound_menu() {
         input_graphics_sound_menu.process_and_queue_render_menu(window, input_state, ui_render_suite);
+    }
+
+    void update_camera_position_with_default_movement(double dt) {
+        fps_camera.update_position_based_on_keys_pressed(
+            input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                input_state, configuration, tbx_engine::config_value_slow_move)),
+            input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                input_state, configuration, tbx_engine::config_value_fast_move)),
+            input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                input_state, configuration, tbx_engine::config_value_forward)),
+            input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                input_state, configuration, tbx_engine::config_value_left)),
+            input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                input_state, configuration, tbx_engine::config_value_back)),
+            input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                input_state, configuration, tbx_engine::config_value_right)),
+            input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(input_state, configuration,
+                                                                                          tbx_engine::config_value_up)),
+            input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                input_state, configuration, tbx_engine::config_value_down)),
+            dt);
     }
 };
 
