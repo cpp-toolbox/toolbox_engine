@@ -63,6 +63,11 @@ int parse_int_or_default(const std::string &text, int default_value);
 //     Configuration configuration;
 // };
 
+/**
+ * @pre you have to have generated the batcher for the absolute_position_with_colored_vertex shader, this is probably
+ * the simplest shader that allows you to express objects with color so I don't find this to be a huge dependency
+ *
+ */
 class ToolboxEngine {
   private:
     const std::string default_config_file_path = "assets/config/user_cfg.ini";
@@ -128,7 +133,72 @@ class ToolboxEngine {
      *
      */
     void process_and_queue_render_input_graphics_sound_menu() {
-        input_graphics_sound_menu.process_and_queue_render_menu(window, input_state, ui_render_suite);
+
+        if (igs_menu_active) {
+            input_graphics_sound_menu.process_and_queue_render_menu(window, input_state, ui_render_suite);
+        }
+
+        if (input_state.is_just_pressed(EKey::ESCAPE)) {
+            igs_menu_active = not igs_menu_active;
+            fps_camera.toggle_camera_freeze();
+            window.toggle_mouse_mode();
+        }
+    }
+
+    /**
+     * draws the stats about the engine that the user has requested to see
+     *
+     */
+    void draw_chosen_engine_stats() {
+        if (configuration.get_value("graphics", "show_fps").value_or("off") == "on") {
+            draw_fps();
+        }
+    }
+
+    draw_info::IVPColor fps_ivpc;
+
+    /**
+     * computes the visible volume of an absolute position shader, these all account for aspect ratio, and thus it is
+     * used here
+     *
+     * also we can use an aabb because the abs position shader doesn't use any perspective so its not a frustum or
+     * something like that
+     */
+    vertex_geometry::AxisAlignedBoundingBox get_visible_aabb_of_absolute_position_shader() {
+        auto [aspect_ratio_x, aspect_ratio_y] = window.get_aspect_ratio_in_simplest_terms();
+        float aspect = static_cast<float>(aspect_ratio_x) / static_cast<float>(aspect_ratio_y);
+
+        glm::vec3 min_corner, max_corner;
+
+        // NOTE: This computes the *visible* volume,
+        // which is the inverse of the shader's scale operation.
+        if (aspect > 1.0f) {
+            // Wider: shader shrinks x => visible area extends further in x
+            min_corner = glm::vec3(-aspect, -1.0f, -1.0f);
+            max_corner = glm::vec3(aspect, 1.0f, 1.0f);
+        } else {
+            // Taller: shader shrinks y => visible area extends further in y
+            min_corner = glm::vec3(-1.0f, -1.0f / aspect, -1.0f);
+            max_corner = glm::vec3(1.0f, 1.0f / aspect, 1.0f);
+        }
+
+        return vertex_geometry::AxisAlignedBoundingBox({min_corner, max_corner});
+    }
+
+    void draw_fps() {
+        auto loop_stats = main_loop.get_average_loop_stats();
+        int average_fps = loop_stats.measured_frequency_hz;
+        auto top_right = get_visible_aabb_of_absolute_position_shader().get_max_xy_position();
+        auto side_length = 0.2;
+
+        // NOTE: here the copy assignment function is used, thus ids are not clobbered, but object becomes dirty, which
+        // is what we want.
+        fps_ivpc = draw_info::IVPColor(
+            grid_font::get_text_geometry(std::to_string(average_fps), vertex_geometry::create_rectangle_from_top_right(
+                                                                          top_right, side_length, side_length)),
+            colors::grey);
+
+        batcher.absolute_position_with_colored_vertex_shader_batcher.queue_draw(fps_ivpc);
     }
 
     void update_camera_position_with_default_movement(double dt) {
