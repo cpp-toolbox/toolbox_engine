@@ -67,6 +67,8 @@ int parse_int_or_default(const std::string &text, int default_value);
  * @pre you have to have generated the batcher for the absolute_position_with_colored_vertex shader, this is probably
  * the simplest shader that allows you to express objects with color so I don't find this to be a huge dependency
  *
+ * This is a 3d interactive experience that has a 3d component and a 2d menu component
+ *
  */
 class ToolboxEngine {
   private:
@@ -92,7 +94,9 @@ class ToolboxEngine {
     ShaderCache shader_cache;
     Batcher batcher;
     FixedFrequencyLoop main_loop;
-    bool igs_menu_active = false;
+
+    bool igs_menu_active = true;
+
     InputGraphicsSoundMenu input_graphics_sound_menu;
     // NOTE: this starts frozen so you have to unfreeze it to look around
     FPSCamera fps_camera;
@@ -101,6 +105,8 @@ class ToolboxEngine {
     SoundSystem sound_system;
 
     UIRenderSuiteImpl ui_render_suite;
+
+    // startfold support for pausing updates from callbacks
 
     ToolboxEngine(const std::string &program_name, std::vector<ShaderType> requested_shaders,
                   std::unordered_map<SoundType, std::string> sound_type_to_file)
@@ -127,22 +133,69 @@ class ToolboxEngine {
         // NOTE: this is required to render the menu
         shader_cache.register_shader_program(ShaderType::ABSOLUTE_POSITION_WITH_COLORED_VERTEX);
         configuration.apply_config_logic();
+        fps_camera.set_cursor_position = [&](double xpos, double ypos) { window.set_cursor_pos(xpos, ypos); };
     }
 
-    /**
-     *
-     */
+    vertex_geometry::Rectangle get_fullscreen_rect() {
+        auto [carsx, carsy] = window.get_corrective_aspect_ratio_scale();
+        vertex_geometry::Rectangle full_screen_rect(glm_utils::zero_R3, 2 * carsx, 2 * carsy);
+        return full_screen_rect;
+    }
+
+    enum class ActiveMouseMode {
+        CameraControl,  // Mouse moves the camera
+        MenuInteraction // Mouse interacts with UI menus
+    };
+
+    ActiveMouseMode active_mouse_mode = ToolboxEngine::ActiveMouseMode::MenuInteraction;
+
+    // NOTE: must be called every frame so that it updates instantly
+    void update_active_mouse_mode(bool any_mouse_interactable_window_open) {
+        bool all_mouse_interactable_menus_closed = not any_mouse_interactable_window_open;
+        if (all_mouse_interactable_menus_closed) {
+            if (active_mouse_mode == ActiveMouseMode::MenuInteraction) {
+                fps_camera.unfreeze_camera();
+                window.disable_cursor();
+                active_mouse_mode = ActiveMouseMode::CameraControl;
+            }
+        } else {
+            if (active_mouse_mode == ActiveMouseMode::CameraControl) {
+                fps_camera.freeze_camera();
+                window.enable_cursor();
+                active_mouse_mode = ActiveMouseMode::MenuInteraction;
+            }
+        }
+    };
+
     void process_and_queue_render_input_graphics_sound_menu() {
+        LogSection _(global_logger, "process_and_queue_render_input_graphics_sound_menu");
 
         if (igs_menu_active) {
+            global_logger.info("igs menu active about to draw it");
             input_graphics_sound_menu.process_and_queue_render_menu(window, input_state, ui_render_suite);
         }
 
-        if (input_state.is_just_pressed(EKey::ESCAPE)) {
-            igs_menu_active = not igs_menu_active;
-            fps_camera.toggle_camera_freeze();
-            window.toggle_mouse_mode();
+        // NOTE: escape only opens the menu if no other menu is open ie camera control is on
+        if (input_state.is_just_pressed(EKey::ESCAPE) and active_mouse_mode == ActiveMouseMode::CameraControl) {
+            igs_menu_active = true;
         }
+        if (input_state.is_just_pressed(EKey::ESCAPE) and active_mouse_mode == ActiveMouseMode::MenuInteraction) {
+            igs_menu_active = false;
+        }
+    }
+
+    // NOTE: this had to be named this to avoid a collidion with process_and_queue_rener_ui because UI doesn't use a
+    // namespace, and it should so fix that later
+    void process_and_queue_render_specific_ui(UI &ui) {
+
+        glm::vec2 acnmp = glm_utils::tuple_to_vec2(
+            window.convert_point_from_2d_screen_space_to_2d_aspect_corrected_normalized_screen_space(
+                input_state.mouse_position_x, input_state.mouse_position_y));
+
+        process_and_queue_render_ui(acnmp, ui, ui_render_suite, input_state.get_keys_just_pressed_this_tick(),
+                                    input_state.is_just_pressed(EKey::BACKSPACE),
+                                    input_state.is_just_pressed(EKey::ENTER),
+                                    input_state.is_just_pressed(EKey::LEFT_MOUSE_BUTTON));
     }
 
     /**
@@ -158,45 +211,34 @@ class ToolboxEngine {
     draw_info::IVPColor fps_ivpc;
 
     /**
-     * computes the visible volume of an absolute position shader, these all account for aspect ratio, and thus it is
-     * used here
+     * computes the visible volume of an absolute position shader, these all account for aspect ratio, and thus it
+     * is used here
      *
      * also we can use an aabb because the abs position shader doesn't use any perspective so its not a frustum or
      * something like that
      */
     vertex_geometry::AxisAlignedBoundingBox get_visible_aabb_of_absolute_position_shader() {
-        auto [aspect_ratio_x, aspect_ratio_y] = window.get_aspect_ratio_in_simplest_terms();
-        float aspect = static_cast<float>(aspect_ratio_x) / static_cast<float>(aspect_ratio_y);
-
-        glm::vec3 min_corner, max_corner;
-
-        // NOTE: This computes the *visible* volume,
-        // which is the inverse of the shader's scale operation.
-        if (aspect > 1.0f) {
-            // Wider: shader shrinks x => visible area extends further in x
-            min_corner = glm::vec3(-aspect, -1.0f, -1.0f);
-            max_corner = glm::vec3(aspect, 1.0f, 1.0f);
-        } else {
-            // Taller: shader shrinks y => visible area extends further in y
-            min_corner = glm::vec3(-1.0f, -1.0f / aspect, -1.0f);
-            max_corner = glm::vec3(1.0f, 1.0f / aspect, 1.0f);
-        }
-
+        auto [x_scale, y_scale] = window.get_corrective_aspect_ratio_scale();
+        glm::vec3 scale_vec{x_scale, y_scale, 1};
+        glm::vec3 min_corner = glm_utils::minus_one_R3 * scale_vec;
+        glm::vec3 max_corner = glm_utils::one_R3 * scale_vec;
         return vertex_geometry::AxisAlignedBoundingBox({min_corner, max_corner});
     }
 
     void draw_fps() {
+        LogSection _(global_logger, "draw_fps");
         auto loop_stats = main_loop.get_average_loop_stats();
         int average_fps = loop_stats.measured_frequency_hz;
         auto top_right = get_visible_aabb_of_absolute_position_shader().get_max_xy_position();
         auto side_length = 0.2;
+        fps_ivpc.logging_enabled = true;
 
-        // NOTE: here the copy assignment function is used, thus ids are not clobbered, but object becomes dirty, which
-        // is what we want.
-        fps_ivpc = draw_info::IVPColor(
+        // NOTE: here the copy assignment function is used, thus ids are not clobbered, but object becomes dirty,
+        // which is what we want.
+        fps_ivpc.copy_draw_data_from(draw_info::IVPColor(
             grid_font::get_text_geometry(std::to_string(average_fps), vertex_geometry::create_rectangle_from_top_right(
                                                                           top_right, side_length, side_length)),
-            colors::grey);
+            colors::grey));
 
         batcher.absolute_position_with_colored_vertex_shader_batcher.queue_draw(fps_ivpc);
     }
@@ -220,6 +262,31 @@ class ToolboxEngine {
             input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
                 input_state, configuration, tbx_engine::config_value_down)),
             dt);
+    }
+
+    /**
+     * @brief Enables standard alpha blending in OpenGL.
+     *
+     * This function enables OpenGL's blending mode and configures it to use
+     * standard alpha transparency. When enabled, fragment colors are combined
+     * with existing framebuffer colors based on their alpha values, allowing
+     * for proper rendering of transparent textures and materials.
+     *
+     * The blending equation used is:
+     *     final_color = src_color * src_alpha + dst_color * (1 - src_alpha)
+     *
+     * This is the most common setup for rendering textures with transparency,
+     * such as UI elements, sprites, or decals.
+     *
+     * Example:
+     * @code
+     * enable_blending();
+     * draw_transparent_object();
+     * @endcode
+     */
+    void enable_blending() {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 };
 
