@@ -95,9 +95,8 @@ class ToolboxEngine {
     Batcher batcher;
     FixedFrequencyLoop main_loop;
 
-    bool igs_menu_active = true;
-
     InputGraphicsSoundMenu input_graphics_sound_menu;
+    bool &igs_menu_active;
     // NOTE: this starts frozen so you have to unfreeze it to look around
     FPSCamera fps_camera;
 
@@ -119,7 +118,7 @@ class ToolboxEngine {
           fps_camera(window.width_px, window.height_px), sound_type_to_file(sound_type_to_file),
           sound_system(100, sound_type_to_file), shader_cache(requested_shaders), batcher(shader_cache),
           input_graphics_sound_menu(window, input_state, batcher, sound_system, configuration),
-          glfw_lambda_callback_manager(window.glfw_window),
+          igs_menu_active(input_graphics_sound_menu.enabled), glfw_lambda_callback_manager(window.glfw_window),
           main_loop(
               tbx_engine::parse_int_or_default(configuration.get_value("graphics", "max_fps").value_or("60"), 60)),
           ui_render_suite(batcher) {
