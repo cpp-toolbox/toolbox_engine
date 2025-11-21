@@ -81,6 +81,15 @@ class ToolboxEngine {
 
     bool window_should_close() { return glfwWindowShouldClose(window.glfw_window); }
 
+    /// a wrapper around the main loop start function so we can inject engine specfic logic around what the user wants
+    /// to do.
+    void start(
+        const std::function<void(double)> &rate_limited_func, const std::function<bool()> &termination_condition_func,
+        std::function<void(IterationStats)> loop_stats_function = [](IterationStats is) {}) {
+        main_loop.start(window.wrap_tick_with_required_glfw_calls(rate_limited_func), termination_condition_func,
+                        loop_stats_function);
+    };
+
     std::pair<int, int> requested_resolution;
 
     Logger logger{"toolbox_engine"};
@@ -93,8 +102,11 @@ class ToolboxEngine {
 
     ShaderCache shader_cache;
     Batcher batcher;
+
+  private:
     FixedFrequencyLoop main_loop;
 
+  public:
     InputGraphicsSoundMenu input_graphics_sound_menu;
     bool &igs_menu_active;
     // NOTE: this starts frozen so you have to unfreeze it to look around
@@ -242,7 +254,27 @@ class ToolboxEngine {
         batcher.absolute_position_with_colored_vertex_shader_batcher.queue_draw(fps_ivpc);
     }
 
+    movement::GodModeInput get_god_mode_movement_input() {
+        return {input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_slow_move)),
+                input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_fast_move)),
+                input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_forward)),
+                input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_left)),
+                input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_back)),
+                input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_right)),
+                input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_up)),
+                input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_down))};
+    }
+
     void update_camera_position_with_default_movement(double dt) {
+
         fps_camera.update_position_based_on_keys_pressed(
             input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
                 input_state, configuration, tbx_engine::config_value_slow_move)),
