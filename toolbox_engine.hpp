@@ -103,7 +103,6 @@ class ToolboxEngine {
     ShaderCache shader_cache;
     Batcher batcher;
 
-  private:
     FixedFrequencyLoop main_loop;
 
   public:
@@ -217,9 +216,13 @@ class ToolboxEngine {
         if (configuration.get_value("graphics", "show_fps").value_or("off") == "on") {
             draw_fps();
         }
+        if (configuration.get_value("graphics", "show_main_loop_iteration_count").value_or("off") == "on") {
+            draw_iteration_count();
+        }
     }
 
     draw_info::IVPColor fps_ivpc;
+    draw_info::IVPColor iteration_count_ivpc;
 
     /**
      * computes the visible volume of an absolute position shader, these all account for aspect ratio, and thus it
@@ -252,6 +255,25 @@ class ToolboxEngine {
             colors::grey));
 
         batcher.absolute_position_with_colored_vertex_shader_batcher.queue_draw(fps_ivpc);
+    }
+
+    void draw_iteration_count() {
+        LogSection _(global_logger, "draw_iteration_count");
+        auto loop_stats = main_loop.get_average_loop_stats();
+        auto top_right = get_visible_aabb_of_absolute_position_shader().get_max_xy_position();
+        auto side_length = 0.2;
+        iteration_count_ivpc.logging_enabled = true;
+
+        // NOTE: here the copy assignment function is used, thus ids are not clobbered, but object becomes dirty,
+        // which is what we want.
+        iteration_count_ivpc.copy_draw_data_from(draw_info::IVPColor(
+            grid_font::get_text_geometry(
+                std::to_string(main_loop.iteration_count),
+                vertex_geometry::slide_rectangle(
+                    vertex_geometry::create_rectangle_from_top_right(top_right, side_length, side_length), 0, -1)),
+            colors::grey));
+
+        batcher.absolute_position_with_colored_vertex_shader_batcher.queue_draw(iteration_count_ivpc);
     }
 
     movement::GodModeInput get_god_mode_movement_input() {
