@@ -178,10 +178,10 @@ class ToolboxEngine {
     };
 
     void process_and_queue_render_input_graphics_sound_menu() {
-        LogSection _(global_logger, "process_and_queue_render_input_graphics_sound_menu");
+        GlobalLogSection _("process_and_queue_render_input_graphics_sound_menu");
 
         if (igs_menu_active) {
-            global_logger.info("igs menu active about to draw it");
+            global_logger->info("igs menu active about to draw it");
             input_graphics_sound_menu.process_and_queue_render_menu(window, input_state, ui_render_suite);
         }
 
@@ -240,7 +240,7 @@ class ToolboxEngine {
     }
 
     void draw_fps() {
-        LogSection _(global_logger, "draw_fps");
+        GlobalLogSection _("draw_fps");
         auto loop_stats = main_loop.get_average_loop_stats();
         int average_fps = loop_stats.measured_frequency_hz;
         auto top_right = get_visible_aabb_of_absolute_position_shader().get_max_xy_position();
@@ -258,7 +258,7 @@ class ToolboxEngine {
     }
 
     void draw_iteration_count() {
-        LogSection _(global_logger, "draw_iteration_count");
+        GlobalLogSection _("draw_iteration_count");
         auto loop_stats = main_loop.get_average_loop_stats();
         auto top_right = get_visible_aabb_of_absolute_position_shader().get_max_xy_position();
         auto side_length = 0.2;
