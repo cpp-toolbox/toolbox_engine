@@ -241,8 +241,7 @@ class ToolboxEngine {
 
     void draw_fps() {
         GlobalLogSection _("draw_fps");
-        auto loop_stats = main_loop.get_average_loop_stats();
-        int average_fps = loop_stats.measured_frequency_hz;
+        int average_fps = main_loop.average_fps.get();
         auto top_right = get_visible_aabb_of_absolute_position_shader().get_max_xy_position();
         auto side_length = 0.2;
         fps_ivpc.logging_enabled = true;
