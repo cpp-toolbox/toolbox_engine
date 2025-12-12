@@ -42,8 +42,9 @@ void potentially_switch_between_menu_and_3d_view(InputState &input_state,
                                                  InputGraphicsSoundMenu &input_graphics_sound_menu,
                                                  FPSCamera &fps_camera, Window &window);
 
-AllGLFWLambdaCallbacks create_default_glcm_for_input_and_camera(InputState &input_state, FPSCamera &fps_camera,
-                                                                Window &window, ShaderCache &shader_cache);
+AllGLFWLambdaCallbacks create_default_glcm_for_input_and_camera(GLFWInputAdapter &glfw_input_adapter,
+                                                                FPSCamera &fps_camera, Window &window,
+                                                                ShaderCache &shader_cache);
 
 std::optional<std::pair<int, int>> extract_width_height_from_resolution(const std::string &resolution);
 
@@ -86,8 +87,15 @@ class ToolboxEngine {
     void start(
         const std::function<void(double)> &rate_limited_func, const std::function<bool()> &termination_condition_func,
         std::function<void(IterationStats)> loop_stats_function = [](IterationStats is) {}) {
-        main_loop.start(window.wrap_tick_with_required_glfw_calls(rate_limited_func), termination_condition_func,
-                        loop_stats_function);
+
+        main_loop.start(
+            [&](double dt) {
+                window.start_of_tick_glfw_logic();
+                rate_limited_func(dt);
+                window.end_of_tick_glfw_logic();
+                input_state.process();
+            },
+            termination_condition_func, loop_stats_function);
     };
 
     std::pair<int, int> requested_resolution;
@@ -97,6 +105,7 @@ class ToolboxEngine {
 
     GLFWLambdaCallbackManager glfw_lambda_callback_manager;
     InputState input_state;
+    GLFWInputAdapter glfw_input_adapter{input_state};
 
     std::vector<ShaderType> requested_shaders;
 
@@ -134,7 +143,7 @@ class ToolboxEngine {
               tbx_engine::parse_int_or_default(configuration.get_value("graphics", "max_fps").value_or("60"), 60)),
           ui_render_suite(batcher) {
         auto all_callbacks =
-            tbx_engine::create_default_glcm_for_input_and_camera(input_state, fps_camera, window, shader_cache);
+            tbx_engine::create_default_glcm_for_input_and_camera(glfw_input_adapter, fps_camera, window, shader_cache);
         glfw_lambda_callback_manager.set_all_callbacks(all_callbacks);
         glfw_lambda_callback_manager.register_all_callbacks_with_glfw();
 
