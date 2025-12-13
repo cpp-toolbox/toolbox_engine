@@ -79,18 +79,19 @@ void potentially_switch_between_menu_and_3d_view(InputState &input_state,
 
 /// @warning: this function will update the fps camera, if you don't want that you can overwrite the callback in the
 /// glfw_callback_manager
-AllGLFWLambdaCallbacks create_default_glcm_for_input_and_camera(InputState &input_state, FPSCamera &fps_camera,
-                                                                Window &window, ShaderCache &shader_cache) {
+AllGLFWLambdaCallbacks create_default_glcm_for_input_and_camera(GLFWInputAdapter &glfw_input_adapter,
+                                                                FPSCamera &fps_camera, Window &window,
+                                                                ShaderCache &shader_cache) {
     std::function<void(unsigned int)> char_callback = [](unsigned int codepoint) {};
     std::function<void(int, int, int, int)> key_callback = [&](int key, int scancode, int action, int mods) {
-        input_state.glfw_key_callback(key, scancode, action, mods);
+        glfw_input_adapter.glfw_key_callback(key, scancode, action, mods);
     };
     std::function<void(double, double)> mouse_pos_callback = [&](double xpos, double ypos) {
         fps_camera.mouse_callback(xpos, ypos);
-        input_state.glfw_cursor_pos_callback(xpos, ypos);
+        glfw_input_adapter.glfw_cursor_pos_callback(xpos, ypos);
     };
     std::function<void(int, int, int)> mouse_button_callback = [&](int button, int action, int mods) {
-        input_state.glfw_mouse_button_callback(button, action, mods);
+        glfw_input_adapter.glfw_mouse_button_callback(button, action, mods);
     };
 
     std::function<void(double, double)> scroll_callback = [&](double x_offset, double y_offset) {};
