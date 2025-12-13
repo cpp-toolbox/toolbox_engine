@@ -83,9 +83,10 @@ class ToolboxEngine {
 
     /// a wrapper around the main loop start function so we can inject engine specfic logic around what the user wants
     /// to do.
-    void start(
-        const std::function<void(double)> &rate_limited_func, const std::function<bool()> &termination_condition_func,
-        std::function<void(IterationStats)> loop_stats_function = [](IterationStats is) {}) {
+    void start(const std::function<void(double)> &rate_limited_func,
+               const std::function<bool()> &termination_condition_func,
+               std::optional<std::function<void(IterationStats)>> loop_stats_function = std::nullopt) {
+        main_loop.wait_strategy = FixedFrequencyLoop::WaitStrategy::busy_wait;
         main_loop.start(window.wrap_tick_with_required_glfw_calls(rate_limited_func), termination_condition_func,
                         loop_stats_function);
     };
