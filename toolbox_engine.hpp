@@ -188,6 +188,10 @@ class ToolboxEngine {
         }
     };
 
+    /**
+     * @brief must be called to render the menu
+     *
+     */
     void process_and_queue_render_input_graphics_sound_menu() {
         GlobalLogSection _("process_and_queue_render_input_graphics_sound_menu");
 
@@ -220,20 +224,23 @@ class ToolboxEngine {
     }
 
     /**
-     * draws the stats about the engine that the user has requested to see
-     *
+     *  @brief draws the stats about the engine that the user has requested to see
      */
     void draw_chosen_engine_stats() {
-        if (configuration.get_value("graphics", "show_fps").value_or("off") == "on") {
+        if (configuration.is_on("graphics", "show_fps")) {
             draw_fps();
         }
-        if (configuration.get_value("graphics", "show_main_loop_iteration_count").value_or("off") == "on") {
+        if (configuration.is_on("graphics", "show_pos")) {
+            draw_pos();
+        }
+        if (configuration.is_on("graphics", "show_main_loop_iteration_count")) {
             draw_iteration_count();
         }
     }
 
     draw_info::IVPColor fps_ivpc;
     draw_info::IVPColor iteration_count_ivpc;
+    draw_info::IVPColor pos_ivpc;
 
     /**
      * computes the visible volume of an absolute position shader, these all account for aspect ratio, and thus it
@@ -284,6 +291,26 @@ class ToolboxEngine {
             colors::grey));
 
         batcher.absolute_position_with_colored_vertex_shader_batcher.queue_draw(iteration_count_ivpc);
+    }
+
+    void draw_pos() {
+        GlobalLogSection _("draw_pos");
+
+        auto pos = fps_camera.transform.get_translation();
+        auto pos_str = vec3_to_string(pos, 2);
+
+        auto top_right = get_visible_aabb_of_absolute_position_shader().get_max_xy_position();
+        auto side_length = 0.2;
+        pos_ivpc.logging_enabled = true;
+
+        pos_ivpc.copy_draw_data_from(draw_info::IVPColor(
+            grid_font::get_text_geometry(
+                pos_str,
+                vertex_geometry::slide_rectangle(
+                    vertex_geometry::create_rectangle_from_top_right(top_right, side_length, side_length), 0, -2)),
+            colors::grey));
+
+        batcher.absolute_position_with_colored_vertex_shader_batcher.queue_draw(pos_ivpc);
     }
 
     movement::GodModeInput get_god_mode_movement_input() {

@@ -50,15 +50,15 @@ void register_input_graphics_sound_config_handlers(Configuration &configuration,
         try {
             ffl.rate_limiter_enabled = true;
             max_fps = std::stoi(value);
+            ffl.set_operation_mode(FixedFrequencyLoop::OperationMode::fixed_frequency);
+            ffl.set_max_update_rate_hz(max_fps);
         } catch (const std::exception &) {
             if (value == "inf") {
-                ffl.rate_limiter_enabled = false;
+                ffl.set_operation_mode(FixedFrequencyLoop::OperationMode::as_fast_as_possible);
             } else {
                 std::cout << "max fps value couldn't be converted to an integer." << std::endl;
             }
         }
-        ffl.max_update_rate_hz = max_fps;
-        std::cout << "just set the update rate on the main tick to " << max_fps << std::endl;
     });
 }
 
