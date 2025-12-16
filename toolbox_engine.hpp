@@ -17,6 +17,7 @@ const std::string config_value_left = "left";
 const std::string config_value_back = "back";
 const std::string config_value_right = "right";
 const std::string config_value_up = "up";
+const std::string config_value_jump = "jump";
 const std::string config_value_down = "down";
 
 const std::unordered_map<std::string, EKey> movement_value_str_to_default_key = {
@@ -27,6 +28,7 @@ const std::unordered_map<std::string, EKey> movement_value_str_to_default_key = 
     {config_value_back, EKey::s},
     {config_value_right, EKey::d},
     {config_value_up, EKey::SPACE},
+    {config_value_jump, EKey::SPACE},
     {config_value_down, EKey::LEFT_SHIFT}};
 
 std::optional<EKey> get_input_key_from_config_if_valid(InputState &input_state, Configuration &configuration,
@@ -262,7 +264,6 @@ class ToolboxEngine {
         int average_fps = main_loop.average_fps.get();
         auto top_right = get_visible_aabb_of_absolute_position_shader().get_max_xy_position();
         auto side_length = 0.2;
-        fps_ivpc.logging_enabled = true;
 
         // NOTE: here the copy assignment function is used, thus ids are not clobbered, but object becomes dirty,
         // which is what we want.
@@ -279,7 +280,6 @@ class ToolboxEngine {
         auto loop_stats = main_loop.get_average_loop_stats();
         auto top_right = get_visible_aabb_of_absolute_position_shader().get_max_xy_position();
         auto side_length = 0.2;
-        iteration_count_ivpc.logging_enabled = true;
 
         // NOTE: here the copy assignment function is used, thus ids are not clobbered, but object becomes dirty,
         // which is what we want.
@@ -301,7 +301,6 @@ class ToolboxEngine {
 
         auto top_right = get_visible_aabb_of_absolute_position_shader().get_max_xy_position();
         auto side_length = 0.2;
-        pos_ivpc.logging_enabled = true;
 
         pos_ivpc.copy_draw_data_from(draw_info::IVPColor(
             grid_font::get_text_geometry(
@@ -330,6 +329,19 @@ class ToolboxEngine {
                     input_state, configuration, tbx_engine::config_value_up)),
                 input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
                     input_state, configuration, tbx_engine::config_value_down))};
+    }
+
+    movement::FPSModeInput get_fps_mode_movement_input() {
+        return {input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_forward)),
+                input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_back)),
+                input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_right)),
+                input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_left)),
+                input_state.is_pressed(tbx_engine::get_input_key_from_config_or_default_value(
+                    input_state, configuration, tbx_engine::config_value_jump))};
     }
 
     void update_camera_position_with_default_movement(double dt) {
