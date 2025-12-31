@@ -87,9 +87,12 @@ class ToolboxEngine {
     /// a wrapper around the main loop start function so we can inject engine specfic logic around what the user wants
     /// to do.
     void start(const std::function<void(double)> &rate_limited_func,
-               const std::function<bool()> &termination_condition_func,
+               const std::optional<std::function<bool()>> &termination_condition_func = std::nullopt,
                std::optional<std::function<void(IterationStats)>> loop_stats_function = std::nullopt) {
         main_loop.wait_strategy = FixedFrequencyLoop::WaitStrategy::busy_wait;
+
+        std::function<bool()> term = termination_condition_func.value_or([&]() { return window_should_close(); });
+
         main_loop.start(
 
             [&](double dt) {
@@ -99,7 +102,7 @@ class ToolboxEngine {
                 input_state.process();
             },
 
-            termination_condition_func, loop_stats_function);
+            term, loop_stats_function);
     };
 
     std::pair<int, int> requested_resolution;
