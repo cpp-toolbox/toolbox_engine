@@ -256,7 +256,7 @@ class ToolboxEngine {
         glm::vec3 scale_vec{x_scale, y_scale, 1};
         glm::vec3 min_corner = glm_utils::minus_one_R3 * scale_vec;
         glm::vec3 max_corner = glm_utils::one_R3 * scale_vec;
-        return vertex_geometry::AxisAlignedBoundingBox({min_corner, max_corner});
+        return vertex_geometry::AxisAlignedBoundingBox(min_corner, max_corner);
     }
 
     void draw_fps() {
