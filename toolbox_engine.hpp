@@ -136,19 +136,19 @@ class ToolboxEngine {
 
     ToolboxEngine(const std::string &program_name, std::vector<ShaderType> requested_shaders,
                   std::unordered_map<SoundType, std::string> sound_type_to_file)
-        : configuration(default_config_file_path), requested_shaders(requested_shaders),
+        : configuration(default_config_file_path),
           requested_resolution(tbx_engine::extract_width_height_from_resolution(
                                    configuration.get_value("graphics", "resolution").value_or("1280x720"))
                                    .value_or(default_resolution)),
           window(requested_resolution.first, requested_resolution.second, program_name,
                  tbx_engine::get_user_on_off_value_or_default(configuration, "graphics", "fullscreen"), false, false),
-          fps_camera(window.width_px, window.height_px), sound_type_to_file(sound_type_to_file),
-          sound_system(100, sound_type_to_file), shader_cache(requested_shaders), batcher(shader_cache),
-          input_graphics_sound_menu(window, input_state, batcher, sound_system, configuration),
-          igs_menu_active(input_graphics_sound_menu.enabled), glfw_lambda_callback_manager(window.glfw_window),
+          glfw_lambda_callback_manager(window.glfw_window), requested_shaders(requested_shaders),
+          shader_cache(requested_shaders), batcher(shader_cache),
           main_loop(
               tbx_engine::parse_int_or_default(configuration.get_value("graphics", "max_fps").value_or("60"), 60)),
-          ui_render_suite(batcher) {
+          input_graphics_sound_menu(window, input_state, batcher, sound_system, configuration),
+          igs_menu_active(input_graphics_sound_menu.enabled), fps_camera(window.width_px, window.height_px),
+          sound_type_to_file(sound_type_to_file), sound_system(100, sound_type_to_file), ui_render_suite(batcher) {
         auto all_callbacks =
             tbx_engine::create_default_glcm_for_input_and_camera(glfw_input_adapter, fps_camera, window, shader_cache);
         glfw_lambda_callback_manager.set_all_callbacks(all_callbacks);
